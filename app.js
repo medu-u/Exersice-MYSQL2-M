@@ -1,24 +1,4 @@
-//Q1.
-// //Import mysql driver
-// const mysql = require("mysql2");
 
-// //Pass credentials to createConnection method
-// const connection = mysql.createConnection({
-//   user: "myDBuser",
-//   password: "12345678",
-//   host: "127.0.0.1",
-//   database: "myDB",
-// });
-// //to connect to MySQL DB
-// connection.connect((err) => {
-//   if (err) {
-//     console.error("Error connecting to database: + err.stack");
-//     return;
-//   }
-//   console.log("Connected");
-// });
-
-//Q2.
 //Import mysql driver
 const express = require("express");
 const app = express();
@@ -254,6 +234,48 @@ app.post("/add-product", (req, res) => {
 
   insertProduct();
 });
+
+
+app.get("/iphones", (req, res) => {
+  connection.query(
+    "SELECT * FROM Products JOIN ProductDescription JOIN ProductPrice JOIN Orders JOIN Users ON Products.product_id = ProductDescription.product_id AND Products.product_id = ProductPrice.product_id",
+    (err, rows) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).send("Database error");
+      }
+
+      // ✅ REMOVE DUPLICATE PRODUCTS USING product_id
+      const uniqueProducts = [];
+      const seen = new Set();
+
+      rows.forEach((item) => {
+        if (!seen.has(item.product_id)) {
+          seen.add(item.product_id);
+          uniqueProducts.push(item);
+        }
+      });
+
+      // ✅ Send clean data to React
+      res.json({ products: uniqueProducts });
+    }
+  );
+});
+
+app.get('/iphones',(req, res) => {
+  connection.query(
+    "SELECT * FROM Products JOIN ProductDescription JOIN ProductPrice ON Products.product_id = ProductDescription.product_id AND Products.product_id = ProductPrice.product_id",(err, rows, fields) => {
+      let iphones ={ products: []};
+      iphones.products = rows;
+      var stringIphones = JSON.stringify(iphones);
+      if(!err) res.end(stringIphones);
+      else console.log(err);
+    }
+    
+  );
+});
+// AND Products.product_id = Orders.product_id AND Product.product_id=Users.product_id
+
 
 app.listen(3001, (err) => {
   if (err) {
